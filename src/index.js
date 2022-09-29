@@ -204,13 +204,12 @@ Tree.prototype.buildTree = function(nodes, depth) {
 
 Tree.prototype.bindEvent = function(ele) {
   ele.addEventListener(
-    'click',
+    'dblclick',
     e => {
       const {target} = e;
       if (
         target.nodeName === 'SPAN' &&
-        (target.classList.contains('treejs-checkbox') ||
-          target.classList.contains('treejs-label'))
+        target.classList.contains('treejs-label')
       ) {
         this.onItemClick(target.parentNode.nodeId);
       } else if (
@@ -218,6 +217,19 @@ Tree.prototype.bindEvent = function(ele) {
         target.classList.contains('treejs-node')
       ) {
         this.onItemClick(target.nodeId);
+      }
+    },
+    false
+  );
+  ele.addEventListener(
+    'click',
+    e => {
+      const {target} = e;
+      if (
+        target.nodeName === 'SPAN' &&
+        target.classList.contains('treejs-checkbox')
+      ) {
+        this.onItemClick(target.parentNode.nodeId);
       } else if (
         target.nodeName === 'SPAN' &&
         target.classList.contains('treejs-switcher')
@@ -226,7 +238,7 @@ Tree.prototype.bindEvent = function(ele) {
       }
     },
     false
-  );
+  )
 };
 
 Tree.prototype.onItemClick = function(id) {
