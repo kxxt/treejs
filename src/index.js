@@ -37,22 +37,21 @@ function animation(duration, callback) {
 function collapseFromLeaf(tree, leafNode) {
   try {
     const nodeLiElement = tree.liElementsById[leafNode.parent.id];
-    if(!nodeLiElement.classList.contains('treejs-node__close'))
+    if (!nodeLiElement.classList.contains('treejs-node__close'))
       nodeLiElement.getElementsByClassName('treejs-switcher')[0].click();
   } catch (error) {
     return;
   }
-  if(leafNode.hasOwnProperty('parent'))
+  if (leafNode.hasOwnProperty('parent'))
     collapseFromLeaf(tree, leafNode.parent);
 }
 
 function expandFromRoot(tree, root) {
   const nodeLiElement = tree.liElementsById[root.id];
-  if(nodeLiElement.classList.contains('treejs-node__close'))
+  if (nodeLiElement.classList.contains('treejs-node__close'))
     nodeLiElement.getElementsByClassName('treejs-switcher')[0].click();
-  if(root.hasOwnProperty('children'))
-    for(let child of root.children)
-      expandFromRoot(tree, child);
+  if (root.hasOwnProperty('children'))
+    for (let child of root.children) expandFromRoot(tree, child);
 }
 
 export default function Tree(container, options) {
@@ -126,7 +125,7 @@ export default function Tree(container, options) {
   });
 
   if (this.options.url) {
-    this.load(data => {
+    this.load((data) => {
       this.init(data);
     });
   } else {
@@ -134,15 +133,10 @@ export default function Tree(container, options) {
   }
 }
 
-Tree.prototype.init = function(data) {
+Tree.prototype.init = function (data) {
   console.time('init');
-  let {
-    treeNodes,
-    nodesById,
-    leafNodesById,
-    defaultValues,
-    defaultDisables,
-  } = Tree.parseTreeData(data);
+  let {treeNodes, nodesById, leafNodesById, defaultValues, defaultDisables} =
+    Tree.parseTreeData(data);
   this.treeNodes = treeNodes;
   this.nodesById = nodesById;
   this.leafNodesById = leafNodesById;
@@ -156,13 +150,13 @@ Tree.prototype.init = function(data) {
   console.timeEnd('init');
 };
 
-Tree.prototype.load = function(callback) {
+Tree.prototype.load = function (callback) {
   console.time('load');
   const {url, method, beforeLoad} = this.options;
   ajax({
     url,
     method,
-    success: result => {
+    success: (result) => {
       let data = result;
       console.timeEnd('load');
       if (beforeLoad) {
@@ -173,7 +167,7 @@ Tree.prototype.load = function(callback) {
   });
 };
 
-Tree.prototype.render = function(treeNodes) {
+Tree.prototype.render = function (treeNodes) {
   const treeEle = Tree.createRootEle();
   treeEle.appendChild(this.buildTree(treeNodes, 0));
   this.bindEvent(treeEle);
@@ -182,10 +176,10 @@ Tree.prototype.render = function(treeNodes) {
   ele.appendChild(treeEle);
 };
 
-Tree.prototype.buildTree = function(nodes, depth) {
+Tree.prototype.buildTree = function (nodes, depth) {
   const rootUlEle = Tree.createUlEle();
   if (nodes && nodes.length) {
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const liEle = Tree.createLiEle(
         node,
         depth === this.options.closeDepth - 1
@@ -202,44 +196,57 @@ Tree.prototype.buildTree = function(nodes, depth) {
   return rootUlEle;
 };
 
-Tree.prototype.bindEvent = function(ele) {
+Tree.prototype.bindEvent = function (ele) {
   ele.addEventListener(
     'dblclick',
-    e => {
+    (e) => {
       const {target} = e;
+      const {onLabelClickOrDoubleClick} = this.options;
       if (
         target.nodeName === 'SPAN' &&
         target.classList.contains('treejs-label')
       ) {
         this.onItemClick(target.parentNode.nodeId);
+        onLabelClickOrDoubleClick &&
+          onLabelClickOrDoubleClick.call(this, target.parentNode.nodeId);
       } else if (
         target.nodeName === 'LI' &&
         target.classList.contains('treejs-node')
       ) {
         this.onItemClick(target.nodeId);
+        onLabelClickOrDoubleClick &&
+          onLabelClickOrDoubleClick.call(this, target.nodeId);
       }
     },
     false
   );
   ele.addEventListener(
     'click',
-    e => {
+    (e) => {
       const {target} = e;
-      if (target.nodeName !== 'SPAN') return;
-      if (target.classList.contains('treejs-checkbox')) {
-        this.onItemClick(target.parentNode.nodeId);
-      } else if (target.classList.contains('treejs-label')) {
-        const {onLabelClick} = this.options;
-        onLabelClick && onLabelClick.call(this, target.parentNode.nodeId);
-      } else if (target.classList.contains('treejs-switcher')) {
-        this.onSwitcherClick(target);
+      const {onLabelClickOrDoubleClick} = this.options;
+      if (target.nodeName === 'SPAN') {
+        if (target.classList.contains('treejs-checkbox')) {
+          this.onItemClick(target.parentNode.nodeId);
+        } else if (target.classList.contains('treejs-label')) {
+          onLabelClickOrDoubleClick &&
+            onLabelClickOrDoubleClick.call(this, target.parentNode.nodeId);
+        } else if (target.classList.contains('treejs-switcher')) {
+          this.onSwitcherClick(target);
+        }
+      } else if (
+        target.nodeName === 'LI' &&
+        target.classList.contains('treejs-node')
+      ) {
+        onLabelClickOrDoubleClick &&
+          onLabelClickOrDoubleClick.call(this, target.nodeId);
       }
     },
     false
-  )
+  );
 };
 
-Tree.prototype.onItemClick = function(id) {
+Tree.prototype.onItemClick = function (id) {
   console.time('onItemClick');
   const node = this.nodesById[id];
   const {onChange} = this.options;
@@ -251,7 +258,7 @@ Tree.prototype.onItemClick = function(id) {
   console.timeEnd('onItemClick');
 };
 
-Tree.prototype.setValue = function(value) {
+Tree.prototype.setValue = function (value) {
   const node = this.nodesById[value];
   if (!node) return;
   const prevStatus = node.status;
@@ -262,7 +269,7 @@ Tree.prototype.setValue = function(value) {
   this.walkDown(node, 'status');
 };
 
-Tree.prototype.getValues = function() {
+Tree.prototype.getValues = function () {
   const values = [];
   for (let id in this.leafNodesById) {
     if (this.leafNodesById.hasOwnProperty(id)) {
@@ -277,9 +284,9 @@ Tree.prototype.getValues = function() {
   return values;
 };
 
-Tree.prototype.setValues = function(values) {
+Tree.prototype.setValues = function (values) {
   this.emptyNodesCheckStatus();
-  values.forEach(value => {
+  values.forEach((value) => {
     this.setValue(value);
   });
   this.updateLiElements();
@@ -287,7 +294,7 @@ Tree.prototype.setValues = function(values) {
   onChange && onChange.call(this);
 };
 
-Tree.prototype.setDisable = function(value) {
+Tree.prototype.setDisable = function (value) {
   const node = this.nodesById[value];
   if (!node) return;
   const prevDisabled = node.disabled;
@@ -299,7 +306,7 @@ Tree.prototype.setDisable = function(value) {
   }
 };
 
-Tree.prototype.getDisables = function() {
+Tree.prototype.getDisables = function () {
   const values = [];
   for (let id in this.leafNodesById) {
     if (this.leafNodesById.hasOwnProperty(id)) {
@@ -311,29 +318,29 @@ Tree.prototype.getDisables = function() {
   return values;
 };
 
-Tree.prototype.setDisables = function(values) {
+Tree.prototype.setDisables = function (values) {
   this.emptyNodesDisable();
-  values.forEach(value => {
+  values.forEach((value) => {
     this.setDisable(value);
   });
   this.updateLiElements();
 };
 
-Tree.prototype.emptyNodesCheckStatus = function() {
+Tree.prototype.emptyNodesCheckStatus = function () {
   this.willUpdateNodesById = this.getSelectedNodesById();
-  Object.values(this.willUpdateNodesById).forEach(node => {
+  Object.values(this.willUpdateNodesById).forEach((node) => {
     if (!node.disabled) node.status = 0;
   });
 };
 
-Tree.prototype.emptyNodesDisable = function() {
+Tree.prototype.emptyNodesDisable = function () {
   this.willUpdateNodesById = this.getDisabledNodesById();
-  Object.values(this.willUpdateNodesById).forEach(node => {
+  Object.values(this.willUpdateNodesById).forEach((node) => {
     node.disabled = false;
   });
 };
 
-Tree.prototype.getSelectedNodesById = function() {
+Tree.prototype.getSelectedNodesById = function () {
   return Object.entries(this.nodesById).reduce((acc, [id, node]) => {
     if (node.status === 1 || node.status === 2) {
       acc[id] = node;
@@ -342,7 +349,7 @@ Tree.prototype.getSelectedNodesById = function() {
   }, {});
 };
 
-Tree.prototype.getDisabledNodesById = function() {
+Tree.prototype.getDisabledNodesById = function () {
   return Object.entries(this.nodesById).reduce((acc, [id, node]) => {
     if (node.disabled) {
       acc[id] = node;
@@ -351,18 +358,18 @@ Tree.prototype.getDisabledNodesById = function() {
   }, {});
 };
 
-Tree.prototype.updateLiElements = function() {
-  Object.values(this.willUpdateNodesById).forEach(node => {
+Tree.prototype.updateLiElements = function () {
+  Object.values(this.willUpdateNodesById).forEach((node) => {
     this.updateLiElement(node);
   });
   this.willUpdateNodesById = {};
 };
 
-Tree.prototype.markWillUpdateNode = function(node) {
+Tree.prototype.markWillUpdateNode = function (node) {
   this.willUpdateNodesById[node.id] = node;
 };
 
-Tree.prototype.onSwitcherClick = function(target) {
+Tree.prototype.onSwitcherClick = function (target) {
   const liEle = target.parentNode;
   const ele = liEle.lastChild;
   const height = ele.scrollHeight;
@@ -401,7 +408,7 @@ Tree.prototype.onSwitcherClick = function(target) {
   }
 };
 
-Tree.prototype.walkUp = function(node, changeState) {
+Tree.prototype.walkUp = function (node, changeState) {
   const {parent} = node;
   if (parent) {
     if (changeState === 'status') {
@@ -430,9 +437,9 @@ Tree.prototype.walkUp = function(node, changeState) {
   }
 };
 
-Tree.prototype.walkDown = function(node, changeState) {
+Tree.prototype.walkDown = function (node, changeState) {
   if (node.children && node.children.length) {
-    node.children.forEach(child => {
+    node.children.forEach((child) => {
       if (changeState === 'status' && child.disabled) return;
       child[changeState] = node[changeState];
       this.markWillUpdateNode(child);
@@ -441,7 +448,7 @@ Tree.prototype.walkDown = function(node, changeState) {
   }
 };
 
-Tree.prototype.updateLiElement = function(node) {
+Tree.prototype.updateLiElement = function (node) {
   const {classList} = this.liElementsById[node.id];
   switch (node.status) {
     case 0:
@@ -469,26 +476,26 @@ Tree.prototype.updateLiElement = function(node) {
   }
 };
 
-Tree.prototype.collapseAll = function() {
+Tree.prototype.collapseAll = function () {
   const leafNodesById = this.leafNodesById;
-  for(let id in leafNodesById) {
+  for (let id in leafNodesById) {
     const leafNode = leafNodesById[id];
     collapseFromLeaf(this, leafNode);
   }
-}
+};
 
-Tree.prototype.expandAll = function() {
+Tree.prototype.expandAll = function () {
   expandFromRoot(this, this.treeNodes[0]);
-}
+};
 
-Tree.parseTreeData = function(data) {
+Tree.parseTreeData = function (data) {
   const treeNodes = deepClone(data);
   const nodesById = {};
   const leafNodesById = {};
   const values = [];
   const disables = [];
-  const walkTree = function(nodes, parent) {
-    nodes.forEach(node => {
+  const walkTree = function (nodes, parent) {
+    nodes.forEach((node) => {
       nodesById[node.id] = node;
       if (node.checked) values.push(node.id);
       if (node.disabled) disables.push(node.id);
@@ -510,19 +517,19 @@ Tree.parseTreeData = function(data) {
   };
 };
 
-Tree.createRootEle = function() {
+Tree.createRootEle = function () {
   const div = document.createElement('div');
   div.classList.add('treejs');
   return div;
 };
 
-Tree.createUlEle = function() {
+Tree.createUlEle = function () {
   const ul = document.createElement('ul');
   ul.classList.add('treejs-nodes');
   return ul;
 };
 
-Tree.createLiEle = function(node, closed) {
+Tree.createLiEle = function (node, closed) {
   const li = document.createElement('li');
   li.classList.add('treejs-node');
   if (closed) li.classList.add('treejs-node__close');

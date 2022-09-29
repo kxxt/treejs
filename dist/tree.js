@@ -358,24 +358,32 @@ Tree.prototype.bindEvent = function (ele) {
 
   ele.addEventListener('dblclick', function (e) {
     var target = e.target;
+    var onLabelClickOrDoubleClick = _this3.options.onLabelClickOrDoubleClick;
 
     if (target.nodeName === 'SPAN' && target.classList.contains('treejs-label')) {
       _this3.onItemClick(target.parentNode.nodeId);
+
+      onLabelClickOrDoubleClick && onLabelClickOrDoubleClick.call(_this3, target.parentNode.nodeId);
     } else if (target.nodeName === 'LI' && target.classList.contains('treejs-node')) {
       _this3.onItemClick(target.nodeId);
+
+      onLabelClickOrDoubleClick && onLabelClickOrDoubleClick.call(_this3, target.nodeId);
     }
   }, false);
   ele.addEventListener('click', function (e) {
     var target = e.target;
-    if (target.nodeName !== 'SPAN') return;
+    var onLabelClickOrDoubleClick = _this3.options.onLabelClickOrDoubleClick;
 
-    if (target.classList.contains('treejs-checkbox')) {
-      _this3.onItemClick(target.parentNode.nodeId);
-    } else if (target.classList.contains('treejs-label')) {
-      var onLabelClick = _this3.options.onLabelClick;
-      onLabelClick && onLabelClick.call(_this3, target.parentNode.nodeId);
-    } else if (target.classList.contains('treejs-switcher')) {
-      _this3.onSwitcherClick(target);
+    if (target.nodeName === 'SPAN') {
+      if (target.classList.contains('treejs-checkbox')) {
+        _this3.onItemClick(target.parentNode.nodeId);
+      } else if (target.classList.contains('treejs-label')) {
+        onLabelClickOrDoubleClick && onLabelClickOrDoubleClick.call(_this3, target.parentNode.nodeId);
+      } else if (target.classList.contains('treejs-switcher')) {
+        _this3.onSwitcherClick(target);
+      }
+    } else if (target.nodeName === 'LI' && target.classList.contains('treejs-node')) {
+      onLabelClickOrDoubleClick && onLabelClickOrDoubleClick.call(_this3, target.nodeId);
     }
   }, false);
 };
