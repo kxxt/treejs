@@ -225,15 +225,13 @@ Tree.prototype.bindEvent = function(ele) {
     'click',
     e => {
       const {target} = e;
-      if (
-        target.nodeName === 'SPAN' &&
-        target.classList.contains('treejs-checkbox')
-      ) {
+      if (target.nodeName !== 'SPAN') return;
+      if (target.classList.contains('treejs-checkbox')) {
         this.onItemClick(target.parentNode.nodeId);
-      } else if (
-        target.nodeName === 'SPAN' &&
-        target.classList.contains('treejs-switcher')
-      ) {
+      } else if (target.classList.contains('treejs-label')) {
+        const {onLabelClick} = this.options;
+        onLabelClick && onLabelClick.call(this, target.parentNode.nodeId);
+      } else if (target.classList.contains('treejs-switcher')) {
         this.onSwitcherClick(target);
       }
     },

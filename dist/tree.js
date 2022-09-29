@@ -367,10 +367,14 @@ Tree.prototype.bindEvent = function (ele) {
   }, false);
   ele.addEventListener('click', function (e) {
     var target = e.target;
+    if (target.nodeName !== 'SPAN') return;
 
-    if (target.nodeName === 'SPAN' && target.classList.contains('treejs-checkbox')) {
+    if (target.classList.contains('treejs-checkbox')) {
       _this3.onItemClick(target.parentNode.nodeId);
-    } else if (target.nodeName === 'SPAN' && target.classList.contains('treejs-switcher')) {
+    } else if (target.classList.contains('treejs-label')) {
+      var onLabelClick = _this3.options.onLabelClick;
+      onLabelClick && onLabelClick.call(_this3, target.parentNode.nodeId);
+    } else if (target.classList.contains('treejs-switcher')) {
       _this3.onSwitcherClick(target);
     }
   }, false);
